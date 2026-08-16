@@ -175,10 +175,43 @@
     box-shadow:0 6px 18px rgba(36,31,24,0.06);
     overflow:hidden;
   }
-  .ledger h2{
-    font-family:'Noto Serif Thai', serif;
-    font-size:15.5px; margin:0; padding:16px 20px 12px; color:var(--cover-dark);
+  .ledger__head{
+    display:flex; align-items:flex-start; justify-content:space-between; gap:10px;
+    flex-wrap:wrap; padding:16px 20px 10px;
   }
+  .ledger__head h2{
+    font-family:'Noto Serif Thai', serif;
+    font-size:15.5px; margin:0; padding:0; color:var(--cover-dark);
+  }
+  .filter-row{display:flex; gap:8px; flex-wrap:wrap;}
+  .filter-select{
+    font-family:'Noto Sans Thai', sans-serif;
+    font-size:12.5px;
+    padding:7px 10px;
+    border:1px solid var(--paper-line);
+    border-radius:8px;
+    background:var(--paper);
+    color:var(--ink);
+    cursor:pointer;
+  }
+  .filter-select:focus{outline:2px solid var(--brass); outline-offset:1px;}
+
+  .month-summary{
+    margin:0 20px 12px;
+    padding:12px 14px;
+    background:rgba(184,147,74,0.10);
+    border:1px dashed var(--brass);
+    border-radius:10px;
+    font-size:12.5px;
+    color:var(--ink-soft);
+    display:flex; gap:14px; flex-wrap:wrap;
+  }
+  .month-summary strong{
+    font-family:'IBM Plex Mono', monospace;
+    color:var(--cover-dark);
+    font-size:13.5px;
+  }
+
   table{width:100%; border-collapse:collapse;}
   thead th{
     font-size:11px; text-transform:uppercase; letter-spacing:.04em;
@@ -211,6 +244,37 @@
   }
   .edit-btn:hover{color:var(--brass-dark); background:rgba(184,147,74,0.12);}
   .empty, .loading{padding:26px 20px 30px; text-align:center; color:var(--ink-soft); font-size:13.5px;}
+
+  tr.month-divider td{
+    background:rgba(184,147,74,0.14);
+    color:var(--brass-dark);
+    font-family:'Noto Serif Thai', serif;
+    font-weight:700;
+    font-size:12.5px;
+    padding:9px 14px;
+    border-bottom:1px solid var(--paper-line);
+    letter-spacing:.02em;
+  }
+
+  .pagination{
+    display:flex; align-items:center; justify-content:center; gap:14px;
+    padding:14px 20px 18px;
+    border-top:1px solid var(--paper-line);
+  }
+  .page-btn{
+    background:var(--paper);
+    border:1px solid var(--paper-line);
+    color:var(--cover-dark);
+    border-radius:8px;
+    width:34px; height:34px;
+    font-size:16px;
+    cursor:pointer;
+    transition:background .15s ease;
+  }
+  .page-btn:hover:not(:disabled){background:rgba(184,147,74,0.14);}
+  .page-btn:disabled{opacity:.35; cursor:default;}
+  .page-btn:focus-visible{outline:2px solid var(--brass); outline-offset:2px;}
+  .page-info{font-family:'IBM Plex Mono', monospace; font-size:12.5px; color:var(--ink-soft);}
 
   .btn-cancel{
     align-self:flex-end;
@@ -280,6 +344,16 @@
     }
     td.del-cell{grid-column:1/-1; text-align:right;}
     .cover__sub{max-width:100%;}
+
+    tbody tr.month-divider{
+      display:block; padding:8px 16px; border-bottom:none;
+    }
+    tr.month-divider td{padding:0; font-size:12px;}
+
+    .ledger__head{padding:14px 16px 8px;}
+    .filter-row{width:100%;}
+    .filter-select{flex:1; min-width:0;}
+    .month-summary{margin:0 16px 12px;}
   }
 
   .foot-note{
@@ -334,7 +408,30 @@
   </div>
 
   <div class="ledger">
-    <h2>รายการบันทึก</h2>
+    <div class="ledger__head">
+      <h2>รายการบันทึก</h2>
+      <div class="filter-row">
+        <select id="monthFilter" class="filter-select" aria-label="กรองตามเดือน">
+          <option value="">เดือน: ทั้งหมด</option>
+          <option value="1">มกราคม</option>
+          <option value="2">กุมภาพันธ์</option>
+          <option value="3">มีนาคม</option>
+          <option value="4">เมษายน</option>
+          <option value="5">พฤษภาคม</option>
+          <option value="6">มิถุนายน</option>
+          <option value="7">กรกฎาคม</option>
+          <option value="8">สิงหาคม</option>
+          <option value="9">กันยายน</option>
+          <option value="10">ตุลาคม</option>
+          <option value="11">พฤศจิกายน</option>
+          <option value="12">ธันวาคม</option>
+        </select>
+        <select id="yearFilter" class="filter-select" aria-label="กรองตามปี">
+          <option value="">ปี: ทั้งหมด</option>
+        </select>
+      </div>
+    </div>
+    <div class="month-summary" id="monthSummary" style="display:none;"></div>
     <div class="loading" id="loadingState">กำลังโหลดข้อมูลจาก Google Sheets...</div>
     <table id="ledgerTable" style="display:none;">
       <thead>
@@ -349,6 +446,11 @@
       <tbody id="ledgerBody"></tbody>
     </table>
     <div class="empty" id="emptyState" style="display:none;">ยังไม่มีรายการ — เริ่มบันทึกยอดสะสมวันแรกได้เลย</div>
+    <div class="pagination" id="pagination" style="display:none;">
+      <button class="page-btn" id="prevPageBtn" title="หน้าก่อนหน้า">&laquo;</button>
+      <span class="page-info" id="pageInfo">หน้า 1 / 1</span>
+      <button class="page-btn" id="nextPageBtn" title="หน้าถัดไป">&raquo;</button>
+    </div>
   </div>
 
   <p class="foot-note">ระบบคำนวณ “รายได้วันนั้น” จากผลต่างของยอดสะสมกับรายการก่อนหน้า<br>ข้อมูลบันทึกลงชีต “Entries” ในไฟล์ Google Sheets นี้โดยตรง</p>
@@ -370,6 +472,10 @@
 let data = { rate: 69, entries: [] };
 let editingId = null;
 let pendingDeleteId = null;
+
+const PAGE_SIZE = 31;
+let currentPage = 1;
+const MONTH_NAMES_TH = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
 
 const $ = id => document.getElementById(id);
 const fmt = n => '฿ ' + (Number(n)||0).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
@@ -413,27 +519,96 @@ function computeRows(){
   });
 }
 
+function populateYearOptions(allRows){
+  const years = Array.from(new Set(allRows.map(r => r.date.slice(0,4)))).sort((a,b)=> b.localeCompare(a));
+  const sel = $('yearFilter');
+  const prevVal = sel.value;
+  sel.innerHTML = '<option value="">ปี: ทั้งหมด</option>' +
+    years.map(y => `<option value="${y}">พ.ศ. ${Number(y)+543}</option>`).join('');
+  if(years.includes(prevVal)) sel.value = prevVal;
+}
+
+function getFilteredRowsDesc(allRows){
+  const month = $('monthFilter').value;
+  const year = $('yearFilter').value;
+  let rows = allRows.slice().reverse(); // เรียงใหม่ล่าสุดก่อน
+  if(month) rows = rows.filter(r => String(Number(r.date.slice(5,7))) === month);
+  if(year) rows = rows.filter(r => r.date.slice(0,4) === year);
+  return rows;
+}
+
 function render(){
   $('loadingState').style.display = 'none';
-  const rows = computeRows();
+  const allRows = computeRows(); // เรียงเก่า->ใหม่ทั้งหมด ใช้คำนวณ daily/net ให้ถูกต้องตามลำดับเวลาจริง
   $('stampRate').textContent = data.rate + '%';
 
-  const latestCum = rows.length ? rows[rows.length-1].cumulative : 0;
-  const totalNet = rows.reduce((s,r)=>s+r.net, 0);
+  const latestCum = allRows.length ? allRows[allRows.length-1].cumulative : 0;
+  const totalNet = allRows.reduce((s,r)=>s+r.net, 0);
   $('heroNet').textContent = fmt(totalNet);
   $('statGross').textContent = fmt(latestCum);
-  $('statDays').textContent = rows.length + ' วัน';
+  $('statDays').textContent = allRows.length + ' วัน';
   $('rateInput').value = data.rate;
+
+  populateYearOptions(allRows);
+
+  const month = $('monthFilter').value;
+  const year = $('yearFilter').value;
+  const filtered = getFilteredRowsDesc(allRows);
+
+  // แถบสรุปยอดของช่วงที่กำลังกรองอยู่ (แสดงเฉพาะตอนเลือกเดือนและ/หรือปี)
+  const summaryEl = $('monthSummary');
+  if((month || year) && filtered.length){
+    const sumDaily = filtered.reduce((s,r)=>s+r.daily, 0);
+    const sumNet = filtered.reduce((s,r)=>s+r.net, 0);
+    let label = 'สรุปช่วงที่เลือก';
+    if(month && year) label = `สรุปเดือน ${MONTH_NAMES_TH[Number(month)-1]} พ.ศ. ${Number(year)+543}`;
+    else if(month) label = `สรุปเดือน ${MONTH_NAMES_TH[Number(month)-1]} (ทุกปี)`;
+    else if(year) label = `สรุปปี พ.ศ. ${Number(year)+543}`;
+    summaryEl.innerHTML = `
+      <span>${label}</span>
+      <span>รายได้รวม <strong>${fmt(sumDaily)}</strong></span>
+      <span>สุทธิรวม <strong>${fmt(sumNet)}</strong></span>
+      <span>บันทึกแล้ว <strong>${filtered.length} วัน</strong></span>
+    `;
+    summaryEl.style.display = 'flex';
+  } else {
+    summaryEl.style.display = 'none';
+  }
+
+  // แบ่งหน้า หน้าละ 31 รายการ
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  if(currentPage > totalPages) currentPage = totalPages;
+  if(currentPage < 1) currentPage = 1;
+  const start = (currentPage - 1) * PAGE_SIZE;
+  const pageRows = filtered.slice(start, start + PAGE_SIZE);
 
   const body = $('ledgerBody');
   body.innerHTML = '';
-  if(rows.length === 0){
+  if(filtered.length === 0){
     $('ledgerTable').style.display = 'none';
     $('emptyState').style.display = 'block';
+    $('emptyState').textContent = (month || year)
+      ? 'ไม่มีรายการในช่วงที่เลือก'
+      : 'ยังไม่มีรายการ — เริ่มบันทึกยอดสะสมวันแรกได้เลย';
+    $('pagination').style.display = 'none';
   } else {
     $('ledgerTable').style.display = 'table';
     $('emptyState').style.display = 'none';
-    rows.slice().reverse().forEach(r=>{
+
+    const showDividers = !month && !year; // จัดกลุ่มตามเดือนอัตโนมัติเฉพาะตอนดู "ทั้งหมด"
+    let lastKey = null;
+    pageRows.forEach(r=>{
+      if(showDividers){
+        const key = r.date.slice(0,7); // yyyy-mm
+        if(key !== lastKey){
+          const divTr = document.createElement('tr');
+          divTr.className = 'month-divider';
+          const [yy, mm] = key.split('-').map(Number);
+          divTr.innerHTML = `<td colspan="5">${MONTH_NAMES_TH[mm-1]} พ.ศ. ${yy+543}</td>`;
+          body.appendChild(divTr);
+          lastKey = key;
+        }
+      }
       const tr = document.createElement('tr');
       tr.className = 'row-in' + (r.warn ? ' warn' : '');
       tr.innerHTML = `
@@ -454,6 +629,11 @@ function render(){
     body.querySelectorAll('.del-btn').forEach(btn=>{
       btn.addEventListener('click', ()=> requestDelete(btn.dataset.id));
     });
+
+    $('pagination').style.display = totalPages > 1 ? 'flex' : 'none';
+    $('pageInfo').textContent = `หน้า ${currentPage} / ${totalPages}`;
+    $('prevPageBtn').disabled = currentPage <= 1;
+    $('nextPageBtn').disabled = currentPage >= totalPages;
   }
 }
 
@@ -577,6 +757,10 @@ async function updateRate(){
 $('addBtn').addEventListener('click', addEntry);
 $('cumInput').addEventListener('keydown', e => { if(e.key === 'Enter') addEntry(); });
 $('rateInput').addEventListener('change', updateRate);
+$('monthFilter').addEventListener('change', ()=>{ currentPage = 1; render(); });
+$('yearFilter').addEventListener('change', ()=>{ currentPage = 1; render(); });
+$('prevPageBtn').addEventListener('click', ()=>{ if(currentPage > 1){ currentPage--; render(); } });
+$('nextPageBtn').addEventListener('click', ()=>{ currentPage++; render(); });
 $('cancelEditBtn').addEventListener('click', cancelEdit);
 $('modalCancelBtn').addEventListener('click', closeDeleteModal);
 $('modalConfirmBtn').addEventListener('click', confirmDelete);
