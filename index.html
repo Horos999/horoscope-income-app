@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<title>สมุดบันทึกรายได้</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Thai:wght@500;600;700&family=Noto+Sans+Thai:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --cover-dark:#16342A;
+    --cover-darker:#0E241C;
+    --paper:#F1E9D8;
+    --paper-light:#F8F3E6;
+    --paper-line:#DCCFAF;
+    --brass:#B8934A;
+    --brass-dark:#8F6F35;
+    --stamp-red:#9B3A2E;
+    --ink:#241F18;
+    --ink-soft:#665D4C;
+    --radius:14px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:#DDD3BC;
+    background-image:
+      radial-gradient(circle at 15% 10%, rgba(255,255,255,0.35), transparent 40%),
+      radial-gradient(circle at 85% 90%, rgba(0,0,0,0.06), transparent 45%);
+    font-family:'Noto Sans Thai', sans-serif;
+    color:var(--ink);
+    min-height:100vh;
+    padding:28px 16px 60px;
+  }
+  .wrap{max-width:640px;margin:0 auto;}
+
+  .cover{
+    position:relative;
+    background:linear-gradient(155deg, var(--cover-dark), var(--cover-darker));
+    border-radius:var(--radius);
+    padding:26px 24px 30px;
+    color:var(--paper-light);
+    overflow:hidden;
+    box-shadow:0 10px 30px rgba(14,36,28,0.35);
+  }
+  .cover::before{
+    content:"";
+    position:absolute; inset:0;
+    background:repeating-linear-gradient(115deg, rgba(255,255,255,0.03) 0 2px, transparent 2px 26px);
+    pointer-events:none;
+  }
+  .cover__eyebrow{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    letter-spacing:.16em;
+    text-transform:uppercase;
+    color:var(--brass);
+    margin:0 0 6px;
+  }
+  .cover__title{
+    font-family:'Noto Serif Thai', serif;
+    font-weight:700;
+    font-size:26px;
+    margin:0;
+    line-height:1.3;
+  }
+  .cover__sub{
+    margin:8px 0 0;
+    font-size:13.5px;
+    color:#CBD9CF;
+    max-width:76%;
+    line-height:1.6;
+  }
+  .stamp{
+    position:absolute;
+    top:18px; right:18px;
+    width:74px; height:74px;
+    border-radius:50%;
+    border:2px dashed var(--brass);
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    transform:rotate(9deg);
+    background:rgba(184,147,74,0.08);
+  }
+  .stamp__num{
+    font-family:'IBM Plex Mono', monospace;
+    font-weight:600; font-size:19px; color:var(--brass);
+    line-height:1;
+  }
+  .stamp__label{
+    font-size:8.5px; color:var(--brass); letter-spacing:.05em; margin-top:2px;
+  }
+
+  .hero{
+    background:var(--paper-light);
+    border-radius:var(--radius);
+    margin-top:14px;
+    padding:20px 22px;
+    box-shadow:0 6px 18px rgba(36,31,24,0.08);
+    border:1px solid var(--paper-line);
+  }
+  .hero__label{font-size:12.5px; color:var(--ink-soft); margin:0 0 4px;}
+  .hero__value{
+    font-family:'IBM Plex Mono', monospace;
+    font-weight:600;
+    font-size:34px;
+    color:var(--cover-dark);
+    margin:0;
+    word-break:break-all;
+  }
+  .hero__stats{
+    display:flex; gap:22px; margin-top:14px; flex-wrap:wrap;
+    border-top:1px dashed var(--paper-line); padding-top:12px;
+  }
+  .hero__stat-label{font-size:11.5px; color:var(--ink-soft);}
+  .hero__stat-value{font-family:'IBM Plex Mono', monospace; font-size:15px; font-weight:600;}
+
+  .rate-row{
+    display:flex; align-items:center; gap:8px; margin-top:14px;
+    font-size:12.5px; color:var(--ink-soft); flex-wrap:wrap;
+  }
+  .rate-row input{
+    width:56px; font-family:'IBM Plex Mono', monospace; font-size:13px;
+    border:1px solid var(--paper-line); border-radius:8px; padding:4px 6px;
+    background:var(--paper);
+  }
+
+  .form-card{
+    background:var(--paper-light);
+    border-radius:var(--radius);
+    margin-top:14px;
+    padding:18px 20px 20px;
+    border:1px solid var(--paper-line);
+    box-shadow:0 6px 18px rgba(36,31,24,0.06);
+  }
+  .form-card h2{
+    font-family:'Noto Serif Thai', serif;
+    font-size:15.5px; margin:0 0 12px; color:var(--cover-dark);
+  }
+  .form-grid{display:flex; gap:10px; flex-wrap:wrap;}
+  .field{flex:1; min-width:130px; display:flex; flex-direction:column; gap:4px;}
+  .field label{font-size:11.5px; color:var(--ink-soft);}
+  .field input{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:14px;
+    padding:9px 10px;
+    border:1px solid var(--paper-line);
+    border-radius:9px;
+    background:var(--paper);
+    color:var(--ink);
+    width:100%;
+  }
+  .field input:focus{outline:2px solid var(--brass); outline-offset:1px;}
+  .btn{
+    align-self:flex-end;
+    background:var(--cover-dark);
+    color:var(--paper-light);
+    border:none; border-radius:9px;
+    padding:10px 18px;
+    font-family:'Noto Sans Thai', sans-serif;
+    font-weight:600; font-size:14px;
+    cursor:pointer;
+    transition:background .15s ease;
+  }
+  .btn:disabled{opacity:.6; cursor:default;}
+  .btn:hover:not(:disabled){background:var(--cover-darker);}
+  .btn:focus-visible{outline:2px solid var(--brass); outline-offset:2px;}
+  .form-msg{font-size:12px; margin:8px 0 0; color:var(--stamp-red); min-height:14px;}
+
+  .ledger{
+    background:var(--paper-light);
+    border-radius:var(--radius);
+    margin-top:14px;
+    border:1px solid var(--paper-line);
+    box-shadow:0 6px 18px rgba(36,31,24,0.06);
+    overflow:hidden;
+  }
+  .ledger h2{
+    font-family:'Noto Serif Thai', serif;
+    font-size:15.5px; margin:0; padding:16px 20px 12px; color:var(--cover-dark);
+  }
+  table{width:100%; border-collapse:collapse;}
+  thead th{
+    font-size:11px; text-transform:uppercase; letter-spacing:.04em;
+    color:var(--ink-soft); text-align:left;
+    padding:8px 14px; border-top:1px solid var(--paper-line); border-bottom:1px solid var(--paper-line);
+    background:rgba(184,147,74,0.07);
+  }
+  thead th.num, td.num{text-align:right;}
+  tbody td{
+    padding:11px 14px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:13.5px;
+    border-bottom:1px dashed var(--paper-line);
+  }
+  tbody tr:last-child td{border-bottom:none;}
+  tbody tr.warn td{background:rgba(155,58,46,0.07);}
+  .warn-flag{
+    display:inline-block; font-family:'Noto Sans Thai',sans-serif; font-size:10.5px;
+    color:var(--stamp-red); border:1px solid var(--stamp-red); border-radius:5px;
+    padding:1px 5px; margin-left:6px; vertical-align:middle;
+  }
+  .del-btn{
+    background:none; border:none; color:var(--ink-soft); cursor:pointer;
+    font-size:15px; line-height:1; padding:2px 6px; border-radius:6px;
+  }
+  .del-btn:hover{color:var(--stamp-red); background:rgba(155,58,46,0.08);}
+  .edit-btn{
+    background:none; border:none; color:var(--ink-soft); cursor:pointer;
+    font-size:14px; line-height:1; padding:2px 6px; border-radius:6px;
+  }
+  .edit-btn:hover{color:var(--brass-dark); background:rgba(184,147,74,0.12);}
+  .empty, .loading{padding:26px 20px 30px; text-align:center; color:var(--ink-soft); font-size:13.5px;}
+
+  .btn-cancel{
+    align-self:flex-end;
+    background:transparent;
+    color:var(--ink-soft);
+    border:1px solid var(--paper-line);
+    border-radius:9px;
+    padding:10px 18px;
+    font-family:'Noto Sans Thai', sans-serif;
+    font-weight:600; font-size:14px;
+    cursor:pointer;
+    transition:background .15s ease, color .15s ease;
+  }
+  .btn-cancel:hover{background:rgba(102,93,76,0.08); color:var(--ink);}
+  .btn-cancel:focus-visible{outline:2px solid var(--brass); outline-offset:2px;}
+
+  .editing-flag{
+    display:inline-block; font-family:'Noto Sans Thai',sans-serif; font-size:10.5px;
+    color:var(--brass-dark); border:1px solid var(--brass); border-radius:5px;
+    padding:1px 6px; margin-left:8px; vertical-align:middle;
+  }
+
+  .modal-overlay{
+    position:fixed; inset:0; background:rgba(14,36,28,0.55);
+    display:flex; align-items:center; justify-content:center;
+    padding:20px; z-index:100;
+  }
+  .modal-box{
+    background:var(--paper-light); border-radius:var(--radius);
+    padding:22px 22px 20px; max-width:340px; width:100%;
+    border:1px solid var(--paper-line);
+    box-shadow:0 14px 34px rgba(14,36,28,0.35);
+  }
+  .modal-title{
+    font-family:'Noto Serif Thai', serif; font-weight:700; font-size:16px;
+    margin:0 0 8px; color:var(--cover-dark);
+  }
+  .modal-detail{
+    font-size:13px; color:var(--ink-soft); margin:0 0 18px; line-height:1.6;
+  }
+  .modal-actions{display:flex; justify-content:flex-end; gap:8px; flex-wrap:wrap;}
+  .btn-danger{
+    background:var(--stamp-red);
+    color:#fff;
+    border:none; border-radius:9px;
+    padding:10px 18px;
+    font-family:'Noto Sans Thai', sans-serif;
+    font-weight:600; font-size:14px;
+    cursor:pointer;
+    transition:background .15s ease;
+  }
+  .btn-danger:hover{background:#7d2e24;}
+  .btn-danger:focus-visible{outline:2px solid var(--brass); outline-offset:2px;}
+
+  @media (max-width:560px){
+    thead{display:none;}
+    table, tbody, tr, td{display:block; width:100%;}
+    tbody tr{
+      padding:12px 16px; border-bottom:1px dashed var(--paper-line);
+      display:grid; grid-template-columns:1fr 1fr; gap:4px 10px;
+    }
+    tbody td{border:none; padding:2px 0; font-size:13px;}
+    td[data-label]::before{
+      content:attr(data-label);
+      display:block; font-family:'Noto Sans Thai',sans-serif;
+      font-size:10px; color:var(--ink-soft); text-transform:uppercase; letter-spacing:.04em;
+    }
+    td.del-cell{grid-column:1/-1; text-align:right;}
+    .cover__sub{max-width:100%;}
+  }
+
+  .foot-note{
+    font-size:11.5px; color:#5B5346; text-align:center; margin-top:16px; line-height:1.7;
+  }
+
+  @media (prefers-reduced-motion:no-preference){
+    .row-in{animation:fadeIn .25s ease;}
+  }
+  @keyframes fadeIn{from{opacity:0; transform:translateY(4px);} to{opacity:1; transform:translateY(0);}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="cover">
+    <div class="stamp"><span class="stamp__num" id="stampRate">69%</span><span class="stamp__label">อัตราสุทธิ</span></div>
+    <p class="cover__eyebrow">Income Passbook</p>
+    <h1 class="cover__title">สมุดบันทึกรายได้</h1>
+    <p class="cover__sub">บันทึกยอดรวมสะสม ระบบจะคำนวณยอดของแต่ละวันและส่วนสุทธิให้อัตโนมัติ · ข้อมูลเก็บใน Google Sheets ของคุณ</p>
+  </div>
+
+  <div class="hero">
+    <p class="hero__label">ยอดสุทธิสะสมทั้งหมด</p>
+    <p class="hero__value" id="heroNet">฿ 0.00</p>
+    <div class="hero__stats">
+      <div><div class="hero__stat-label">ยอดเต็มล่าสุด</div><div class="hero__stat-value" id="statGross">฿ 0.00</div></div>
+      <div><div class="hero__stat-label">บันทึกแล้ว</div><div class="hero__stat-value" id="statDays">0 วัน</div></div>
+    </div>
+    <div class="rate-row">
+      อัตราสุทธิ
+      <input type="number" id="rateInput" value="69" min="0" max="100" step="0.1"> %
+      ของยอดเต็มที่เพิ่มขึ้นในแต่ละครั้ง
+    </div>
+  </div>
+
+  <div class="form-card">
+    <h2 id="formTitle">เพิ่มบันทึก</h2>
+    <div class="form-grid">
+      <div class="field">
+        <label for="dateInput">วันที่</label>
+        <input type="date" id="dateInput">
+      </div>
+      <div class="field">
+        <label for="cumInput">ยอดรวมสะสม ณ วันนี้ (บาท)</label>
+        <input type="number" id="cumInput" min="0" step="0.01" placeholder="เช่น 1000">
+      </div>
+      <button class="btn" id="addBtn">บันทึกลงสมุด</button>
+      <button class="btn-cancel" id="cancelEditBtn" style="display:none;">ยกเลิก</button>
+    </div>
+    <p class="form-msg" id="formMsg"></p>
+  </div>
+
+  <div class="ledger">
+    <h2>รายการบันทึก</h2>
+    <div class="loading" id="loadingState">กำลังโหลดข้อมูลจาก Google Sheets...</div>
+    <table id="ledgerTable" style="display:none;">
+      <thead>
+        <tr>
+          <th>วันที่</th>
+          <th class="num">ยอดสะสม</th>
+          <th class="num">รายได้วันนั้น</th>
+          <th class="num">สุทธิ</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="ledgerBody"></tbody>
+    </table>
+    <div class="empty" id="emptyState" style="display:none;">ยังไม่มีรายการ — เริ่มบันทึกยอดสะสมวันแรกได้เลย</div>
+  </div>
+
+  <p class="foot-note">ระบบคำนวณ “รายได้วันนั้น” จากผลต่างของยอดสะสมกับรายการก่อนหน้า<br>ข้อมูลบันทึกลงชีต “Entries” ในไฟล์ Google Sheets นี้โดยตรง</p>
+
+</div>
+
+<div class="modal-overlay" id="deleteModal" style="display:none;">
+  <div class="modal-box">
+    <p class="modal-title">ยืนยันการลบรายการ</p>
+    <p class="modal-detail" id="modalDetail">รายการนี้จะถูกลบอย่างถาวรและไม่สามารถกู้คืนได้</p>
+    <div class="modal-actions">
+      <button class="btn-cancel" id="modalCancelBtn">ยกเลิก</button>
+      <button class="btn-danger" id="modalConfirmBtn">ลบรายการ</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let data = { rate: 69, entries: [] };
+let editingId = null;
+let pendingDeleteId = null;
+
+const $ = id => document.getElementById(id);
+const fmt = n => '฿ ' + (Number(n)||0).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
+function fmtDate(iso){
+  const [y,m,d] = iso.split('-').map(Number);
+  return String(d).padStart(2,'0') + '/' + String(m).padStart(2,'0') + '/' + (y+543);
+}
+
+// ===== ตั้งค่า URL ของ Apps Script Web App (ตัวที่เสิร์ฟข้อมูลจาก Google Sheets เดิม) =====
+// เอา URL ที่ได้จากตอน deploy Apps Script (ลงท้ายด้วย /exec) มาใส่ตรงนี้
+const API_URL = 'https://script.google.com/macros/s/AKfycbxTayYXZ7_YkIrK8JVe3GgguzflLUl5mZ3E49sn4XgaTZS_r4guBVACLAXyny3l7ExUVw/exec';
+
+async function apiGet(){
+  const res = await fetch(API_URL);
+  if(!res.ok) throw new Error('เชื่อมต่อ API ไม่สำเร็จ (' + res.status + ')');
+  const json = await res.json();
+  if(json.error) throw new Error(json.error);
+  return json;
+}
+
+async function apiPost(action, payload){
+  const res = await fetch(API_URL, {
+    method: 'POST',
+    body: JSON.stringify(Object.assign({ action: action }, payload))
+  });
+  if(!res.ok) throw new Error('เชื่อมต่อ API ไม่สำเร็จ (' + res.status + ')');
+  const json = await res.json();
+  if(json.error) throw new Error(json.error);
+  return json;
+}
+
+function computeRows(){
+  const sorted = [...data.entries].sort((a,b)=> a.date === b.date ? a.id.localeCompare(b.id) : a.date.localeCompare(b.date));
+  let prev = 0;
+  return sorted.map(e=>{
+    const daily = e.cumulative - prev;
+    const net = daily * (data.rate/100);
+    const warn = daily < 0;
+    prev = e.cumulative;
+    return {...e, daily, net, warn};
+  });
+}
+
+function render(){
+  $('loadingState').style.display = 'none';
+  const rows = computeRows();
+  $('stampRate').textContent = data.rate + '%';
+
+  const latestCum = rows.length ? rows[rows.length-1].cumulative : 0;
+  const totalNet = rows.reduce((s,r)=>s+r.net, 0);
+  $('heroNet').textContent = fmt(totalNet);
+  $('statGross').textContent = fmt(latestCum);
+  $('statDays').textContent = rows.length + ' วัน';
+  $('rateInput').value = data.rate;
+
+  const body = $('ledgerBody');
+  body.innerHTML = '';
+  if(rows.length === 0){
+    $('ledgerTable').style.display = 'none';
+    $('emptyState').style.display = 'block';
+  } else {
+    $('ledgerTable').style.display = 'table';
+    $('emptyState').style.display = 'none';
+    rows.slice().reverse().forEach(r=>{
+      const tr = document.createElement('tr');
+      tr.className = 'row-in' + (r.warn ? ' warn' : '');
+      tr.innerHTML = `
+        <td data-label="วันที่">${fmtDate(r.date)}${r.warn ? '<span class="warn-flag">ยอดลดลง</span>' : ''}</td>
+        <td data-label="ยอดสะสม" class="num">${fmt(r.cumulative)}</td>
+        <td data-label="รายได้วันนั้น" class="num">${fmt(r.daily)}</td>
+        <td data-label="สุทธิ" class="num">${fmt(r.net)}</td>
+        <td class="del-cell">
+          <button class="edit-btn" title="แก้ไขรายการ" data-id="${r.id}">✎</button>
+          <button class="del-btn" title="ลบรายการ" data-id="${r.id}">✕</button>
+        </td>
+      `;
+      body.appendChild(tr);
+    });
+    body.querySelectorAll('.edit-btn').forEach(btn=>{
+      btn.addEventListener('click', ()=> startEdit(btn.dataset.id));
+    });
+    body.querySelectorAll('.del-btn').forEach(btn=>{
+      btn.addEventListener('click', ()=> requestDelete(btn.dataset.id));
+    });
+  }
+}
+
+async function load(){
+  try{
+    data = await apiGet();
+  }catch(err){
+    $('loadingState').textContent = 'โหลดข้อมูลไม่สำเร็จ ลองรีเฟรชหน้านี้อีกครั้ง';
+    console.error(err);
+    return;
+  }
+  render();
+}
+
+async function addEntry(){
+  const date = $('dateInput').value;
+  const cumVal = parseFloat($('cumInput').value);
+  const msg = $('formMsg');
+  msg.textContent = '';
+
+  if(!date){ msg.textContent = 'กรุณาเลือกวันที่'; return; }
+  if(isNaN(cumVal) || cumVal < 0){ msg.textContent = 'กรุณาใส่ยอดรวมสะสมให้ถูกต้อง'; return; }
+
+  const btn = $('addBtn');
+  btn.disabled = true;
+  try{
+    if(editingId !== null){
+      const original = data.entries.find(e => String(e.id) === String(editingId));
+      if(original && original.date !== date){
+        // วันที่ถูกเปลี่ยน: ลบรายการเดิมออกก่อน แล้วค่อยบันทึกที่วันที่ใหม่
+        data = await apiPost('deleteEntry', { id: editingId });
+      }
+      data = await apiPost('upsertEntry', { date: date, cumulative: cumVal });
+      exitEditMode();
+    } else {
+      data = await apiPost('upsertEntry', { date: date, cumulative: cumVal });
+      $('cumInput').value = '';
+    }
+    render();
+  }catch(err){
+    msg.textContent = editingId !== null ? 'บันทึกการแก้ไขไม่สำเร็จ ลองอีกครั้ง' : 'บันทึกไม่สำเร็จ ลองอีกครั้ง';
+    console.error(err);
+  }finally{
+    btn.disabled = false;
+  }
+}
+
+function startEdit(id){
+  const entry = data.entries.find(e => String(e.id) === String(id));
+  if(!entry) return;
+  editingId = entry.id;
+  $('dateInput').value = entry.date;
+  $('cumInput').value = entry.cumulative;
+  $('formTitle').innerHTML = 'แก้ไขบันทึก<span class="editing-flag">กำลังแก้ไข</span>';
+  $('addBtn').textContent = 'บันทึกการแก้ไข';
+  $('cancelEditBtn').style.display = 'inline-block';
+  $('formMsg').textContent = '';
+  document.querySelector('.form-card').scrollIntoView({behavior:'smooth', block:'start'});
+  $('cumInput').focus();
+}
+
+function exitEditMode(){
+  editingId = null;
+  $('formTitle').textContent = 'เพิ่มบันทึก';
+  $('addBtn').textContent = 'บันทึกลงสมุด';
+  $('cancelEditBtn').style.display = 'none';
+  $('dateInput').valueAsDate = new Date();
+  $('cumInput').value = '';
+  $('formMsg').textContent = '';
+}
+
+function cancelEdit(){
+  exitEditMode();
+}
+
+async function deleteEntry(id){
+  try{
+    data = await apiPost('deleteEntry', { id: id });
+    render();
+  }catch(err){
+    console.error(err);
+  }
+}
+
+function requestDelete(id){
+  const entry = data.entries.find(e => String(e.id) === String(id));
+  pendingDeleteId = id;
+  $('modalDetail').textContent = entry
+    ? `รายการวันที่ ${fmtDate(entry.date)} ยอดสะสม ${fmt(entry.cumulative)} จะถูกลบอย่างถาวรและไม่สามารถกู้คืนได้`
+    : 'รายการนี้จะถูกลบอย่างถาวรและไม่สามารถกู้คืนได้';
+  $('deleteModal').style.display = 'flex';
+}
+
+function closeDeleteModal(){
+  pendingDeleteId = null;
+  $('deleteModal').style.display = 'none';
+}
+
+async function confirmDelete(){
+  if(pendingDeleteId === null) return;
+  const id = pendingDeleteId;
+  closeDeleteModal();
+  if(editingId !== null && String(editingId) === String(id)){
+    exitEditMode();
+  }
+  await deleteEntry(id);
+}
+
+async function updateRate(){
+  let v = parseFloat($('rateInput').value);
+  if(isNaN(v) || v < 0) v = 0;
+  if(v > 100) v = 100;
+  try{
+    data = await apiPost('setRate', { rate: v });
+    render();
+  }catch(err){
+    console.error(err);
+  }
+}
+
+$('addBtn').addEventListener('click', addEntry);
+$('cumInput').addEventListener('keydown', e => { if(e.key === 'Enter') addEntry(); });
+$('rateInput').addEventListener('change', updateRate);
+$('cancelEditBtn').addEventListener('click', cancelEdit);
+$('modalCancelBtn').addEventListener('click', closeDeleteModal);
+$('modalConfirmBtn').addEventListener('click', confirmDelete);
+$('deleteModal').addEventListener('click', e => { if(e.target.id === 'deleteModal') closeDeleteModal(); });
+document.addEventListener('keydown', e => {
+  if(e.key === 'Escape' && $('deleteModal').style.display !== 'none') closeDeleteModal();
+});
+
+$('dateInput').valueAsDate = new Date();
+
+load();
+</script>
+</body>
+</html>
