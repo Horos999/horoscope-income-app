@@ -124,6 +124,12 @@
     border:1px solid var(--paper-line); border-radius:8px; padding:4px 6px;
     background:var(--paper);
   }
+  .period-flag{
+    margin:8px 0 0;
+    font-size:12.5px;
+    font-weight:700;
+    color:var(--stamp-red);
+  }
 
   .form-card{
     background:var(--paper-light);
@@ -195,22 +201,6 @@
     cursor:pointer;
   }
   .filter-select:focus{outline:2px solid var(--brass); outline-offset:1px;}
-
-  .month-summary{
-    margin:0 20px 12px;
-    padding:12px 14px;
-    background:rgba(184,147,74,0.10);
-    border:1px dashed var(--brass);
-    border-radius:10px;
-    font-size:12.5px;
-    color:var(--ink-soft);
-    display:flex; gap:14px; flex-wrap:wrap;
-  }
-  .month-summary strong{
-    font-family:'IBM Plex Mono', monospace;
-    color:var(--cover-dark);
-    font-size:13.5px;
-  }
 
   table{width:100%; border-collapse:collapse;}
   thead th{
@@ -353,7 +343,6 @@
     .ledger__head{padding:14px 16px 8px;}
     .filter-row{width:100%;}
     .filter-select{flex:1; min-width:0;}
-    .month-summary{margin:0 16px 12px;}
   }
 
   .foot-note{
@@ -388,6 +377,7 @@
       <input type="number" id="rateInput" value="69" min="0" max="100" step="0.1"> %
       ของยอดเต็มที่เพิ่มขึ้นในแต่ละครั้ง
     </div>
+    <p class="period-flag" id="periodFlag" style="display:none;"></p>
   </div>
 
   <div class="form-card">
@@ -431,7 +421,6 @@
         </select>
       </div>
     </div>
-    <div class="month-summary" id="monthSummary" style="display:none;"></div>
     <div class="loading" id="loadingState">กำลังโหลดข้อมูลจาก Google Sheets...</div>
     <table id="ledgerTable" style="display:none;">
       <thead>
@@ -542,37 +531,29 @@ function render(){
   const allRows = computeRows(); // เรียงเก่า->ใหม่ทั้งหมด ใช้คำนวณ daily/net ให้ถูกต้องตามลำดับเวลาจริง
   $('stampRate').textContent = data.rate + '%';
 
-  const latestCum = allRows.length ? allRows[allRows.length-1].cumulative : 0;
-  const totalNet = allRows.reduce((s,r)=>s+r.net, 0);
-  $('heroNet').textContent = fmt(totalNet);
-  $('statGross').textContent = fmt(latestCum);
-  $('statDays').textContent = allRows.length + ' วัน';
-  $('rateInput').value = data.rate;
-
   populateYearOptions(allRows);
 
   const month = $('monthFilter').value;
   const year = $('yearFilter').value;
   const filtered = getFilteredRowsDesc(allRows);
 
-  // แถบสรุปยอดของช่วงที่กำลังกรองอยู่ (แสดงเฉพาะตอนเลือกเดือนและ/หรือปี)
-  const summaryEl = $('monthSummary');
-  if((month || year) && filtered.length){
-    const sumDaily = filtered.reduce((s,r)=>s+r.daily, 0);
-    const sumNet = filtered.reduce((s,r)=>s+r.net, 0);
-    let label = 'สรุปช่วงที่เลือก';
-    if(month && year) label = `สรุปเดือน ${MONTH_NAMES_TH[Number(month)-1]} พ.ศ. ${Number(year)+543}`;
-    else if(month) label = `สรุปเดือน ${MONTH_NAMES_TH[Number(month)-1]} (ทุกปี)`;
-    else if(year) label = `สรุปปี พ.ศ. ${Number(year)+543}`;
-    summaryEl.innerHTML = `
-      <span>${label}</span>
-      <span>รายได้รวม <strong>${fmt(sumDaily)}</strong></span>
-      <span>สุทธิรวม <strong>${fmt(sumNet)}</strong></span>
-      <span>บันทึกแล้ว <strong>${filtered.length} วัน</strong></span>
-    `;
-    summaryEl.style.display = 'flex';
+  // กล่องสรุปยอดด้านบน: ค่าเริ่มต้น (ไม่กรอง) = ยอดรวมทั้งหมด, ถ้าเลือกเดือน/ปี = ยอดเฉพาะช่วงที่เลือก
+  const periodLatestCum = filtered.length ? filtered[0].cumulative : 0;
+  const periodNet = filtered.reduce((s,r)=>s+r.net, 0);
+  $('heroNet').textContent = fmt(periodNet);
+  $('statGross').textContent = fmt(periodLatestCum);
+  $('statDays').textContent = filtered.length + ' วัน';
+  $('rateInput').value = data.rate;
+
+  // ป้ายแดงบอกช่วงที่กำลังแสดงอยู่ (แสดงเฉพาะตอนเลือกเดือนและ/หรือปี)
+  const periodFlag = $('periodFlag');
+  if(month || year){
+    const monthLabel = month ? MONTH_NAMES_TH[Number(month)-1] : 'ทุกเดือน';
+    const yearLabel = year ? ('พ.ศ. ' + (Number(year)+543)) : 'ทุกปี';
+    periodFlag.textContent = `ยอดประจำเดือน ${monthLabel} ปี ${yearLabel}`;
+    periodFlag.style.display = 'block';
   } else {
-    summaryEl.style.display = 'none';
+    periodFlag.style.display = 'none';
   }
 
   // แบ่งหน้า หน้าละ 31 รายการ
